@@ -1,8 +1,5 @@
-// app/api/waitlist/route.ts
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../lib/supabaseAdmin'
-'
-; // relative path
+import { supabaseAdmin } from '../../../lib/supabaseAdmin'; // relative path
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +15,10 @@ export async function POST(request: Request) {
       source: source?.trim() ?? 'site',
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? 'Unknown error' }, { status: 500 });

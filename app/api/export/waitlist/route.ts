@@ -1,34 +1,38 @@
-import { supabaseAdmin } from '../../../../lib/supabaseAdmin'
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '../../../../lib/supabaseAdmin'; // relative path
 
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('waitlist')
-    .select('created_at,email,name,source')
-    .order('created_at', { ascending: false })
+    .select('email,name,source,created_at')
+    .order('created_at', { ascending: false });
 
   if (error) {
-    return new Response('DB error: ' + error.message, { status: 500 })
+    return new NextResponse(`Error: ${error.message}`, { status: 500 });
   }
 
-  const header = ['created_at', 'email', 'name', 'source']
-  const rows = (data ?? []).map((r) =>
-    [
-      r.created_at,
-      r.email,
-      (r.name ?? '').replace(/"/g, '""'),
-      (r.source ?? '').replace(/"/g, '""'),
-    ]
-      .map((v) => `"${(v ?? '').toString()}"`)
-      .join(',')
-  )
-  const csv = [header.join(','), ...rows].join('\n')
+  const rows = data ?? [];
+  const header = ['email', 'name', 'source', 'created_at'];
+  const lines = [
+    header.join(','),
+    ...rows.map((r) =>
+      [
+        r.email,
+        r.name ?? '',
+        r.source ?? '',
+        new Date(r.created_at).toISOString(),
+      ]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(',')
+    ),
+  ];
+  const csv = lines.join('\r\n');
 
-  return new Response(csv, {
+  return new NextResponse(csv, {
     status: 200,
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="playpass_waitlist.csv"`,
-      'Cache-Control': 'no-store',
+      'Content-Disposition': `attachment; filename="waitlist_${Date.now()}.csv"`,
     },
-  })
+  });
 }
