@@ -1,6 +1,7 @@
 // app/api/waitlist/route.ts
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../../lib/supabaseAdmin'
+import { supabaseAdmin } from '../../../lib/supabaseAdmin'
+'
 ; // relative path
 
 export async function POST(request: Request) {
