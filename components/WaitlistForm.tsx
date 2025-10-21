@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { track } from '@vercel/analytics/react'; // ✅ Import analytics tracker
 
 export default function WaitlistForm() {
   const [name, setName] = useState('');
@@ -12,7 +13,7 @@ export default function WaitlistForm() {
     setStatus('loading');
     setMsg('');
 
-    // 🐝 HONEYPOT: get hidden "website" value
+    // 🐝 HONEYPOT: hidden "website" field for bot detection
     const website =
       (document.querySelector('input[name="website"]') as HTMLInputElement)
         ?.value || '';
@@ -21,16 +22,25 @@ export default function WaitlistForm() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // include website in payload
         body: JSON.stringify({ name, email, source: 'landing', website }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Failed');
+
+      // ✅ Success flow
       setStatus('ok');
       setMsg('Thanks! You’re on the list.');
       setName('');
       setEmail('');
+
+      // ✅ Analytics event tracking
+      track('joined_waitlist', { email, name });
+
+      // ✅ Redirect to success page
+      setTimeout(() => {
+        window.location.href = '/success';
+      }, 1200);
     } catch (err: any) {
       setStatus('err');
       setMsg(err?.message || 'Something went wrong');
@@ -74,7 +84,9 @@ export default function WaitlistForm() {
       </button>
 
       {msg && (
-        <p className={status === 'ok' ? 'text-green-600' : 'text-red-600'}>{msg}</p>
+        <p className={status === 'ok' ? 'text-green-600' : 'text-red-600'}>
+          {msg}
+        </p>
       )}
 
       <p className="text-xs text-gray-600 text-center">
