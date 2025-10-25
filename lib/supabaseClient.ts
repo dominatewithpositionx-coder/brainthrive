@@ -1,12 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
+// ✅ Environment variables from your .env.local
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+// ✅ Export a single Supabase client instance
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

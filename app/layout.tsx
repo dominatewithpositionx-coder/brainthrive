@@ -13,40 +13,6 @@ export const metadata: Metadata = {
   title: 'BrainThrive — Empowering Smarter Play and Focus',
   description:
     'BrainThrive helps families balance screen time, boost focus, and reward positive habits — because thriving brains grow through balance.',
-  keywords: [
-    'BrainThrive',
-    'screen time app',
-    'family focus tracker',
-    'kids productivity',
-    'habit rewards',
-  ],
-  authors: [{ name: 'BrainThrive Team', url: 'https://brainthrive.vercel.app' }],
-  metadataBase: new URL('https://brainthrive.vercel.app'),
-  openGraph: {
-    title: 'BrainThrive — Empowering Smarter Play and Focus',
-    description:
-      'A smarter way to help your kids balance screens, earn rewards, and thrive every day.',
-    url: 'https://brainthrive.vercel.app',
-    siteName: 'BrainThrive',
-    images: [
-      {
-        url: '/brainthrive-og.png',
-        width: 1200,
-        height: 630,
-        alt: 'BrainThrive Logo and Tagline',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@BrainThrive',
-    title: 'BrainThrive — Smarter Play. Balanced Life.',
-    description:
-      'Balance screen time, focus, and rewards with BrainThrive — empowering families everywhere.',
-    images: ['/brainthrive-og.png'],
-  },
   icons: {
     icon: '/brand/brainthrive/favicon.ico',
   },
@@ -60,10 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="max-w-5xl mx-auto px-4 py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 font-bold text-xl">
             <Image
-              src="/brand/brainthrive/logo.svg"
+              src="/brand/brainthrive/BrainThrive_FullLogo_Gradient.png"
               alt="BrainThrive Logo"
-              width={150}
-              height={32}
+              width={160}
+              height={40}
               priority
             />
           </Link>
@@ -89,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </footer>
 
-        {/* ✅ Toast notifications */}
+        {/* Toast notifications */}
         <Toaster
           position="top-right"
           toastOptions={{
@@ -100,11 +66,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               borderRadius: '8px',
               fontWeight: 500,
             },
-            success: { iconTheme: { primary: '#00e08a', secondary: '#fff' } },
           }}
         />
 
-        {/* ✅ Vercel Analytics */}
+        {/* Analytics */}
         <Analytics />
       </body>
     </html>

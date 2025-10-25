@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient'; // ✅ Use the persistent client
+import { supabase } from '../../lib/supabaseClient'; // ✅ Use the persistent client
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
