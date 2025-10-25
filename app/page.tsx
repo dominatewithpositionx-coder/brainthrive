@@ -1,22 +1,59 @@
-// app/page.tsx
 'use client';
-import { useEffect } from 'react';
-import { track } from '@vercel/analytics';
-import WaitlistForm from '../components/WaitlistForm';
 
-export default function Page() {
-  // Track when someone views the homepage
-  useEffect(() => {
-    track('viewed_homepage');
-  }, []);
+import { useState } from 'react';
+import { toast } from 'react-hot-toast';
+
+export default function HomePage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email }),
+    });
+
+    const data = await res.json();
+    if (res.ok) toast.success(data.message || 'Welcome to BrainThrive!');
+    else toast.error(data.error || 'Something went wrong');
+  }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center text-center px-4">
-      <h1 className="text-5xl font-extrabold tracking-tight mb-6">PlayPass</h1>
-      <p className="text-lg text-gray-700 mb-10 max-w-2xl">
+    <section className="text-center py-24">
+      <h1 className="text-4xl font-bold text-navy mb-4">BrainThrive</h1>
+      <p className="text-gray-600 mb-6">
         Balance screen time with real-world wins. Join the waitlist to get early access.
       </p>
-      <WaitlistForm />
-    </main>
+
+      <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-3">
+        <input
+          type="text"
+          placeholder="Your name (optional)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="border border-gray-300 rounded-md w-full px-3 py-2"
+        />
+        <input
+          type="email"
+          placeholder="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border border-gray-300 rounded-md w-full px-3 py-2"
+          required
+        />
+        <button
+          type="submit"
+          className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-6 py-2 rounded-md w-full font-medium"
+        >
+          Join Waitlist
+        </button>
+      </form>
+
+      <p className="text-xs text-gray-500 mt-3">
+        By joining, you agree to our <a href="/privacy" className="underline">Privacy Policy</a>.
+      </p>
+    </section>
   );
 }

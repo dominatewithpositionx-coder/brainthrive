@@ -1,0 +1,72 @@
+import { NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// 🧠 Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export async function POST(req: Request) {
+  try {
+    const { childName, rewardTitle, cost, pointsRemaining } = await req.json();
+
+    if (!childName || !rewardTitle || !cost) {
+      return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+    }
+
+    // ✅ Replace this with the logged-in parent's email later
+    const parentEmail = 'dominatewithpositionx@gmail.com';
+
+    // 🧠 Check parent's notification preferences
+    const { data: prefs, error: prefsError } = await supabase
+      .from('notification_settings')
+      .select('reward_notifications')
+      .eq('parent_email', parentEmail)
+      .single();
+
+    if (prefsError) {
+      console.error('⚠️ Error checking notification settings:', prefsError);
+    }
+
+    if (!prefs?.reward_notifications) {
+      console.log(`🚫 Reward email skipped for ${parentEmail} (notifications off).`);
+      return NextResponse.json({ success: true, skipped: true });
+    }
+
+    // 🧠 Load HTML template
+    const templatePath = path.join(process.cwd(), 'emails', 'reward-redeemed.html');
+    let emailHtml = fs.readFileSync(templatePath, 'utf8');
+
+    // 🪄 Replace placeholders
+    emailHtml = emailHtml
+      .replace(/{{childName}}/g, childName)
+      .replace(/{{rewardTitle}}/g, rewardTitle)
+      .replace(/{{cost}}/g, String(cost))
+      .replace(/{{pointsRemaining}}/g, String(pointsRemaining))
+      .replace(
+        /{{dashboardUrl}}/g,
+        'https://playpass-j6nnnwxps-waynes-projects-0468582a.vercel.app/dashboard'
+      )
+      .replace(/{{year}}/g, new Date().getFullYear().toString());
+
+    // ✉️ Send email via Resend
+    await resend.emails.send({
+      from: 'PlayPass <notifications@resend.dev>',
+      to: parentEmail,
+      subject: `🎁 ${childName} redeemed ${rewardTitle}!`,
+      html: emailHtml,
+    });
+
+    console.log(`✅ Sent reward email to ${parentEmail}`);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Error sending reward email:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

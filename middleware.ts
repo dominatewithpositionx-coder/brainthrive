@@ -1,36 +1,33 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-const unauthorized = () =>
-  new NextResponse('Unauthorized', {
-    status: 401,
-    headers: { 'WWW-Authenticate': 'Basic realm="PlayPass Admin"' },
-  })
+export async function middleware(req: NextRequest) {
+  // Initialize Supabase client
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-export function middleware(req: NextRequest) {
-  const url = new URL(req.url)
-  const protectedPrefixes = ['/admin', '/api/export']
-  const needsAuth = protectedPrefixes.some((p) => url.pathname.startsWith(p))
-  if (!needsAuth) return NextResponse.next()
+  // Try to get session
+  const { data } = await supabase.auth.getSession()
 
-  const header = req.headers.get('authorization') || ''
-  if (!header.startsWith('Basic ')) {
-    return unauthorized()
-  }
+  // Protected routes
+  const protectedRoutes = ['/dashboard']
 
-  try {
-    const decoded = Buffer.from(header.replace('Basic ', ''), 'base64').toString()
-    const [user, pass] = decoded.split(':')
-    if (user === process.env.ADMIN_USER && pass === process.env.ADMIN_PASS) {
-      return NextResponse.next()
+  if (protectedRoutes.some((path) => req.nextUrl.pathname.startsWith(path))) {
+    if (!data.session) {
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = '/auth'
+      redirectUrl.searchParams.set('from', req.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
     }
-  } catch {
-    // fallthrough to unauthorized
   }
 
-  return unauthorized()
+  return NextResponse.next()
 }
 
+// ✅ Apply middleware to /dashboard routes only
 export const config = {
-  matcher: ['/admin/:path*', '/api/export/:path*'],
+  matcher: ['/dashboard/:path*'],
 }

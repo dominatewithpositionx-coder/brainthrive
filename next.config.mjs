@@ -6,3 +6,4 @@
  }
  };
  export default nextConfig;
+console.log('🚀 BrainThrive configuration loaded successfully');

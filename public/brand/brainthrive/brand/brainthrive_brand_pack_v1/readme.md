@@ -1,0 +1,1 @@
+Instructions for integrating BrainThrive assets into your app
