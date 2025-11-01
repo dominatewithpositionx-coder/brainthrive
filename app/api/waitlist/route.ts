@@ -1,81 +1,58 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
-import fs from 'fs';
-import path from 'path';
-
-// 🧠 Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-// ✉️ Initialize Resend (email service)
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
-    const { name, email, source } = await req.json();
+    const { name, email, source, website } = await req.json();
 
-    // 🧩 Basic validation
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // 🧠 Insert subscriber into Supabase
-    const { error } = await supabase.from('waitlist').insert([
-      {
-        name,
-        email,
-        source: source || 'brainthrive-landing',
-        created_at: new Date().toISOString(),
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+      throw new Error('Missing Supabase environment variables');
+    }
+
+    const endpoint = `${SUPABASE_URL}/rest/v1/waitlist`;
+
+    console.log('📡 Sending request to:', endpoint);
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        Prefer: 'return=representation',
       },
-    ]);
+      // 🧠 Removed `joined_at` since it's not in your Supabase schema
+      body: JSON.stringify({
+        name: name || null,
+        email,
+        source: source || 'landing',
+        website: website || null,
+      }),
+    });
 
-    if (error) throw error;
-
-    // 🧾 Load BrainThrive branded HTML email
-    const templatePath = path.join(process.cwd(), 'emails', 'brainthrive-welcome.html');
-    let emailHtml = fs.readFileSync(templatePath, 'utf8');
-
-    // 🧩 Personalize message
-    const parentName = name?.trim() || 'Parent';
-    emailHtml = emailHtml.replace(/{{name}}/g, parentName);
-
-    // ✅ Validate Resend key
-    if (!process.env.RESEND_API_KEY) {
-      console.error('🚨 Missing RESEND_API_KEY in .env.local');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Supabase insert failed:', errorText);
       return NextResponse.json(
-        { error: 'Email service not configured properly.' },
-        { status: 500 }
+        { error: 'Supabase insert failed', details: errorText },
+        { status: response.status }
       );
     }
 
-    // 📬 Define email recipient
-    const sendTo =
-      process.env.NODE_ENV === 'production'
-        ? email // ✅ Real email in production
-        : 'dominatewithpositionx@gmail.com'; // 👈 Sandbox testing email
+    const data = await response.json();
+    console.log('✅ Supabase insert success:', data);
 
-    // ✉️ Send email via Resend
-    const result = await resend.emails.send({
-      from: 'BrainThrive <notifications@resend.dev>',
-      to: sendTo,
-      subject: `🧠 Welcome to BrainThrive, ${parentName}!`,
-      html: emailHtml,
-    });
-
-    console.log('📬 Resend response:', result);
-
-    // ✅ Return success JSON
-    return NextResponse.json({
-      success: true,
-      message: `You’re on the list, ${parentName}! Check your inbox for your BrainThrive welcome email.`,
-    });
-  } catch (error: any) {
-    console.error('❌ Waitlist API Error:', error);
+    return NextResponse.json({ success: true, data });
+  } catch (err: any) {
+    console.error('❌ Waitlist API Error:', err);
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { message: err.message, stack: err.stack },
       { status: 500 }
     );
   }

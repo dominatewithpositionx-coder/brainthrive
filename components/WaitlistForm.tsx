@@ -1,12 +1,15 @@
 'use client';
+
 import { useState } from 'react';
-import { track } from '@vercel/analytics/react'; // ✅ Import analytics tracker
+import { useRouter } from 'next/navigation';
+import { track } from '@vercel/analytics/react'; // ✅ Analytics tracker
 
 export default function WaitlistForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle');
   const [msg, setMsg] = useState('');
+  const router = useRouter();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,22 +31,18 @@ export default function WaitlistForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Failed');
 
-      // ✅ Success flow
-      setStatus('ok');
-      setMsg('Thanks! You’re on the list.');
-      setName('');
-      setEmail('');
-
-      // ✅ Analytics event tracking
+      // ✅ Track waitlist signup in analytics
       track('joined_waitlist', { email, name });
 
-      // ✅ Redirect to success page
-      setTimeout(() => {
-        window.location.href = '/success';
-      }, 1200);
+      // ✅ Redirect to Success Page (confetti + share modal)
+      router.push('/success');
     } catch (err: any) {
       setStatus('err');
       setMsg(err?.message || 'Something went wrong');
+    } finally {
+      setStatus('idle');
+      setName('');
+      setEmail('');
     }
   }
 
@@ -77,14 +76,18 @@ export default function WaitlistForm() {
       />
 
       <button
-        className="w-full rounded-md bg-black text-white py-2 disabled:opacity-60"
+        className="w-full rounded-md bg-gradient-to-r from-green-400 to-emerald-500 text-white py-2 font-semibold disabled:opacity-60"
         disabled={status === 'loading'}
       >
         {status === 'loading' ? 'Joining…' : 'Join Waitlist'}
       </button>
 
       {msg && (
-        <p className={status === 'ok' ? 'text-green-600' : 'text-red-600'}>
+        <p
+          className={`text-center ${
+            status === 'err' ? 'text-red-600' : 'text-green-600'
+          }`}
+        >
           {msg}
         </p>
       )}
