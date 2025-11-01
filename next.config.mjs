@@ -1,9 +1,20 @@
- /** @type {import('next').NextConfig} */
- const nextConfig = {
- reactStrictMode: true,
- experimental: {
- optimizePackageImports: ['@supabase/supabase-js']
- }
- };
- export default nextConfig;
+// next.config.mjs
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['@supabase/supabase-js'],
+  },
+  images: {
+    domains: ['brainthrive.vercel.app'], // ✅ Allow images from your Vercel domain
+  },
+  env: {
+    NEXT_PUBLIC_SITE_NAME: 'BrainThrive',
+    NEXT_PUBLIC_SITE_URL: 'https://brainthrive.vercel.app',
+  },
+};
+
 console.log('🚀 BrainThrive configuration loaded successfully');
+
+export default nextConfig;
