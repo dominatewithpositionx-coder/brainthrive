@@ -7,7 +7,7 @@ const nextConfig = {
     optimizePackageImports: ['@supabase/supabase-js'],
   },
   images: {
-    domains: ['brainthrive.vercel.app'], // ✅ Allow images from your Vercel domain
+    domains: ['brainthrive.vercel.app'],
   },
   env: {
     NEXT_PUBLIC_SITE_NAME: 'BrainThrive',
