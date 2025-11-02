@@ -17,8 +17,6 @@ export async function POST(req: Request) {
 
     const endpoint = `${SUPABASE_URL}/rest/v1/waitlist`;
 
-    console.log('📡 Sending request to:', endpoint);
-
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -27,21 +25,21 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
         Prefer: 'return=representation',
       },
-      // 🧠 Removed `joined_at` since it's not in your Supabase schema
       body: JSON.stringify({
-        name: name || null,
         email,
-        source: source || 'landing',
+        name: name || null,
+        source: source || 'site',
         website: website || null,
+        // 🟢 removed joined_at because Supabase auto-generates it
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Supabase insert failed:', errorText);
+      const text = await response.text();
+      console.error('❌ Supabase insert failed:', text);
       return NextResponse.json(
-        { error: 'Supabase insert failed', details: errorText },
-        { status: response.status }
+        { error: 'Supabase insert failed', details: text },
+        { status: 400 }
       );
     }
 

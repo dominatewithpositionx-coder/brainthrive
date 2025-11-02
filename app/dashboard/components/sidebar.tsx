@@ -21,7 +21,7 @@ const navLinks = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function sidebar() {
   const pathname = usePathname();
 
   return (

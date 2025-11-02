@@ -1,76 +1,57 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import confetti from 'canvas-confetti';
+import { NextResponse } from 'next/server';
 
-export default function WaitlistForm() {
-  const router = useRouter();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle');
+export async function POST(req: Request) {
+  try {
+    const { name, email, source, website } = await req.json();
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setStatus('loading');
-
-    try {
-      const res = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, source: 'landing' }),
-      });
-
-      if (!res.ok) throw new Error('Signup failed');
-      setStatus('ok');
-
-      // 🎉 Trigger confetti
-      confetti({
-        particleCount: 120,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
-
-      // Redirect to success page (modal + share prompt)
-      setTimeout(() => {
-        router.push('/success');
-      }, 800);
-    } catch (err) {
-      setStatus('err');
-      alert('Something went wrong. Please try again.');
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
+
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+      throw new Error('Missing Supabase environment variables');
+    }
+
+    const endpoint = `${SUPABASE_URL}/rest/v1/waitlist`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({
+        email,
+        name: name || null,
+        source: source || 'landing',
+        website: website || null,
+        joined_at: new Date().toISOString(),
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('❌ Supabase insert failed:', text);
+      return NextResponse.json(
+        { error: 'Supabase insert failed', details: text },
+        { status: 400 }
+      );
+    }
+
+    const data = await response.json();
+    console.log('✅ Supabase insert success:', data);
+
+    return NextResponse.json({ success: true, data });
+  } catch (err: any) {
+    console.error('❌ Waitlist API Error:', err);
+    return NextResponse.json(
+      { message: err.message, stack: err.stack },
+      { status: 500 }
+    );
   }
-
-  return (
-    <form onSubmit={submit} className="mx-auto w-full max-w-md space-y-3">
-      <input
-        className="border rounded-md px-3 py-2 w-full"
-        placeholder="Your name (optional)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-
-      <input
-        className="border rounded-md px-3 py-2 w-full"
-        type="email"
-        required
-        placeholder="Email address"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      <button
-        className="w-full rounded-md bg-gradient-to-r from-green-400 to-green-500 text-white py-2 disabled:opacity-60"
-        disabled={status === 'loading'}
-      >
-        {status === 'loading' ? 'Joining…' : 'Join Waitlist'}
-      </button>
-
-      <p className="text-xs text-gray-600 text-center">
-        By joining, you agree to our{' '}
-        <a className="underline" href="/privacy">
-          Privacy Policy
-        </a>.
-      </p>
-    </form>
-  );
 }
