@@ -1,9 +1,11 @@
 // app/api/export/csv/route.ts
 
-// ✅ Prevent pre-rendering (fixes Vercel build)
+// ✅ Absolutely prevent static optimization
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const dynamicParams = true;
 export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
@@ -16,6 +18,7 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('Supabase query failed:', error.message);
       return new NextResponse(`Error: ${error.message}`, { status: 500 });
     }
 
@@ -47,6 +50,7 @@ export async function GET() {
       },
     });
   } catch (err: any) {
+    console.error('CSV export error:', err);
     return new NextResponse(`Error: ${err?.message || 'Unknown error'}`, {
       status: 500,
     });

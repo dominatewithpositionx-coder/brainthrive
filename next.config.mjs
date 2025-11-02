@@ -4,7 +4,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@supabase/supabase-js'],
   },
-  // ✅ Prevent static export on API routes
+  // ✅ Ensure API routes are treated as dynamic
   output: 'standalone',
 };
 
