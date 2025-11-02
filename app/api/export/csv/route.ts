@@ -1,8 +1,7 @@
 // app/api/export/csv/route.ts
 
-// ✅ Absolutely prevent static optimization
+// 🚫 Prevent Next.js from pre-rendering or statically analyzing this API route
 export const dynamic = 'force-dynamic';
-export const dynamicParams = true;
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 export const runtime = 'nodejs';
@@ -12,6 +11,12 @@ import { supabaseAdmin } from '../../../../lib/supabaseAdmin';
 
 export async function GET() {
   try {
+    // ✅ Make sure environment variables exist
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing Supabase environment variables');
+      return new NextResponse('Missing Supabase configuration.', { status: 500 });
+    }
+
     const { data, error } = await supabaseAdmin
       .from('waitlist')
       .select('email,name,source,created_at')
@@ -51,8 +56,6 @@ export async function GET() {
     });
   } catch (err: any) {
     console.error('CSV export error:', err);
-    return new NextResponse(`Error: ${err?.message || 'Unknown error'}`, {
-      status: 500,
-    });
+    return new NextResponse(`Error: ${err?.message || 'Unknown error'}`, { status: 500 });
   }
 }

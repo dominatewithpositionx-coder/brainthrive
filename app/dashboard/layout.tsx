@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-
+import Sidebar from '../_components/Sidebar';
+import Header from '../_components/Header';
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
