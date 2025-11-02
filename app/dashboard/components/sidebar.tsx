@@ -2,17 +2,24 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import type { LucideIcon } from 'lucide-react';
 import { Home, Users, BarChart3, Gift, Settings, ClipboardList } from 'lucide-react';
 
-// ✅ Define your brand info locally instead of importing from a missing file
 const brand = {
-  name: "BrainThrive",
-  logo: "/brand/brainthrive/BrainThrive-logo.svg", // make sure this path exists in /public/brand/brainthrive/
+  name: 'BrainThrive',
+  // Make sure this file exists in /public/brand/brainthrive/
+  logo: '/brand/brainthrive/BrainThrive-logo.svg',
 };
 
-const navLinks = [
+type NavItem = {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+};
+
+const navLinks: NavItem[] = [
   { name: 'Overview', href: '/dashboard', icon: Home },
   { name: 'Children', href: '/dashboard/children', icon: Users },
   { name: 'Tasks', href: '/dashboard/tasks', icon: ClipboardList },
@@ -21,11 +28,11 @@ const navLinks = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
-export default function sidebar() {
+export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-white shadow-md border-r">
+    <aside className="w-64 shrink-0 border-r bg-white shadow-md">
       <div className="p-4 text-center">
         <Link href="/" className="inline-flex items-center justify-center">
           <Image
@@ -40,16 +47,21 @@ export default function sidebar() {
 
       <nav className="mt-2 space-y-1">
         {navLinks.map(({ name, href, icon: Icon }) => {
-          const isActive = pathname === href;
+          const isActive =
+            pathname === href ||
+            (href !== '/dashboard' && pathname?.startsWith(href));
+
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-6 py-3 rounded-md transition-colors duration-150 ${
+              aria-current={isActive ? 'page' : undefined}
+              className={[
+                'flex items-center gap-3 px-6 py-3 rounded-md transition-colors duration-150',
                 isActive
                   ? 'bg-gray-200 font-semibold text-black'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-              }`}
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-black',
+              ].join(' ')}
             >
               <Icon size={18} />
               <span>{name}</span>
